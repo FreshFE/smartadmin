@@ -2,7 +2,7 @@
 
 use Think\Model as Model;
 
-class ContentModel extends Model {
+class Content extends Model {
 
 	/**
 	 * 被默认创建的数据

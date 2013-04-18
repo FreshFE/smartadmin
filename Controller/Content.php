@@ -14,7 +14,7 @@ use Think\Library\Upload\Upload as Upload;
  * ContentExtendAction
  * 后台开发CURD及页面控制器
  */
-class ContentController extends Controller {
+class Content extends Controller {
 
 	// Model Config
 	/**
@@ -277,7 +277,6 @@ class ContentController extends Controller {
 
 		$info = Upload::image($_FILES['uploadify_file'], $image_thumb_name);
 		Response::json($info);
-		// $this->ajaxReturn($info);
 	}
 
 	/**
@@ -296,7 +295,6 @@ class ContentController extends Controller {
 
 		// 输出JSON
 		Response::json($info);
-		// $this->ajaxReturn($info);
 	}
 
 	/**

@@ -6,6 +6,8 @@ use Think\Response as Response;
 use Think\Redirect as Redirect;
 use Think\Import as Import;
 use Think\Controller as Controller;
+use Think\Debug as Debug;
+use Think\Exception as Exception;
 
 use Think\Library\Category as Category;
 use Think\Library\Upload\Upload as Upload;
@@ -16,12 +18,11 @@ use Think\Library\Upload\Upload as Upload;
  */
 class Content extends Controller {
 
-	// Model Config
 	/**
 	 * 主模型
 	 * 默认由构造函数通过D或M方法声明
 	 *
-	 * var object
+	 * @var object
 	 */
 	protected $model;
 
@@ -30,52 +31,85 @@ class Content extends Controller {
 	 * 通过D()或M()方法声明
 	 * 在构造函数内使用，require
 	 *
-	 * var string
+	 * @var string
 	 */
 	protected $model_name;
 
-	// Thumb Config
 	/**
 	 * 上传图片匹配的尺寸名称
 	 *
-	 * var string
+	 * @var string
 	 */
 	protected $image_thumb_name;
 
 	/**
 	 * 缩略图匹配的尺寸名称
 	 *
-	 * var string
+	 * @var string
 	 */
 	protected $cover_thumb_name;
 
 	// Category Config
 	/**
-	 * 在category中的分类编号
-	 *
-	 * var int
-	 */
-	protected $category_id;
-
-	/**
 	 * 分类Model的名称
 	 * 默认为'category'表
+	 * 可以为category表，也可以为内容表的子表
 	 *
-	 * var string
+	 * @var string
 	 */
 	protected $category_model = 'Category';
 
 	/**
+	 * 自动定义category_id
+	 * 在$this->set_category_id方法中被定义
+	 * 当url中存在$this->category_query_name的get值，则自动获取定义category_id
+	 *
+	 * @var bealoon
+	 */
+	protected $category_id_auto_set = false;
+
+	/**
+	 * 是否必须提供$category_id
+	 * 如果是，则必须在url中添加，否则返回404
+	 *
+	 * @var bealoon
+	 */
+	protected $category_id_require = false;
+
+	/**
+	 * 在category中的分类ID
+	 * 也可以为内容子表的ID
+	 *
+	 * @var int
+	 */
+	protected $category_id;
+
+	/**
+	 * 分类表的ID在当前内容表中的外键名称
+	 * 也可以代表内容父表在当前子表内的外键名称
+	 *
+	 * @var string
+	 */
+	protected $category_fk_name = 'cid';
+
+	/**
+	 * URL请求部分中query的名称
+	 *
+	 * @var string
+	 */
+	protected $category_query_name = 'cid';
+
+	/**
 	 * 每页显示多少行
 	 *
-	 * var int
+	 * @var int
 	 */
 	protected $list_rows = 20;
 
 	/**
 	 * 主键名称
 	 *
-	 * var string
+	 * @var string
 	 */
 	protected $pk_name = 'id';
 
@@ -89,7 +123,7 @@ class Content extends Controller {
 	/**
 	 * 查询条件
 	 *
-	 * var array
+	 * @var array
 	 */
 	protected $condition = array();
 
@@ -99,8 +133,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function __construct() {
-
+	public function __construct()
+	{
 		parent::__construct();
 
 		// 创建主模型
@@ -113,6 +147,9 @@ class Content extends Controller {
 		if($this->cover_thumb_name) {
 			$this->assign('coverThumbSize', $this->cover_thumb_name);
 		}
+
+		// 如果category_id没有被定义，则自动获取
+		$this->set_category_id();
 	}
 
 	/**
@@ -122,13 +159,16 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function index() {
-
+	public function index()
+	{
 		// 获得页码
 		$page = $_GET['page'] ? $_GET['page'] : 1;
 
-		// cid排序
-		if($_GET['cid']) $this->condition['cid'] = $_GET['cid'];
+		// $this->category_fk_name 指向分类的外键
+		if($_GET[$this->category_query_name])
+		{
+			$this->condition[$this->category_fk_name] = $_GET[$this->category_query_name];
+		}
 
 		// 获得内容并输出页码数组
 		$datas = $this->model->where($this->condition)->page($page, $this->list_rows)->select();
@@ -149,8 +189,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function create() {
-
+	public function create()
+	{
 		// Post提交后的执行
 		if(Request::is('post')) {
 
@@ -173,10 +213,19 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function add() {
+	public function add()
+	{
+		$id = $this->model->createDefault(array($this->category_fk_name => $this->category_id));
 
-		$id = $this->model->createDefault(array('cid' => $this->category_id));
-		Redirect::success('创建成功，请编辑', Url::make('edit', array('id' => $id)));
+		if($id)
+		{
+			Redirect::success('创建成功，请编辑', Url::make('edit', array('id' => $id)));
+		}
+		else {
+			dump(array($this->category_fk_name => $this->category_id));
+			exit();
+			Redirect::error('创建失败，请重试');
+		}
 	}
 
 	/**
@@ -185,8 +234,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function edit() {
-
+	public function edit()
+	{
 		if(Request::is('post')) {
 
 			$data = $this->model->create();
@@ -212,8 +261,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function detail() {
-
+	public function detail()
+	{
 		if($this->pk_id) {
 
 			$data = $this->model->find($this->pk_id);
@@ -228,8 +277,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function enable() {
-
+	public function enable()
+	{
 		if($this->pk_id) {
 
 			$this->model->find($this->pk_id);
@@ -246,8 +295,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function delete() {
-
+	public function delete()
+	{
 		if($this->pk_id) {
 
 			$this->model->delete($this->pk_id);
@@ -261,8 +310,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function sidebar() {
-
+	public function sidebar()
+	{
 		// 侧边分栏
 		$this->assign('category', $this->category());
 		return $this->fetch('sidebar');
@@ -273,8 +322,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function image() {
-
+	public function image()
+	{
 		$info = Upload::image($_FILES['uploadify_file'], $image_thumb_name);
 		Response::json($info);
 	}
@@ -285,8 +334,8 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function cover() {
-
+	public function cover()
+	{
 		// 上传图片
 		$info = Upload::image($_FILES['uploadify_file'], $this->cover_thumb_name);
 
@@ -302,10 +351,26 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	protected function category() {
-
+	protected function category()
+	{
 		$Category = new Category($this->category_model);
 		return $Category->getList('', $this->category_id, 'priority ASC');
 	}
 
+	/**
+	 * set_category_id获得方式
+	 */
+	protected function set_category_id()
+	{
+		if($this->category_id_require && !isset($_GET[$this->category_query_name]))
+		{
+			Debug::output(new Exception('没有提供:' . $this->category_query_name));
+
+		}
+
+		if($this->category_id_auto_set && isset($_GET[$this->category_query_name]))
+		{
+			$this->category_id = $_GET[$this->category_query_name];
+		}
+	}
 }

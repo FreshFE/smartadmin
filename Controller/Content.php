@@ -128,6 +128,13 @@ class Content extends Controller {
 	protected $condition = array();
 
 	/**
+	 * url中带有的query内容，由GET获得
+	 *
+	 * @var array
+	 */
+	protected $query = array();
+
+	/**
 	 * 构造函数
 	 * 构建常用参数内容
 	 *
@@ -150,6 +157,9 @@ class Content extends Controller {
 
 		// 如果category_id没有被定义，则自动获取
 		$this->set_category_id();
+
+		// 保存所有query的信息，除$this->pk_name外
+		$this->save_query();
 	}
 
 	/**
@@ -196,7 +206,7 @@ class Content extends Controller {
 
 			$data = $this->model->create();
 			$this->model->add($data);
-			Redirect::success('创建成功', Url::make('index'));
+			Redirect::success('创建成功', Url::make('index', $this->query));
 
 		// 未执行Post时的默认行为
 		} else {
@@ -219,11 +229,11 @@ class Content extends Controller {
 
 		if($id)
 		{
-			Redirect::success('创建成功，请编辑', Url::make('edit', array('id' => $id)));
+			$query = array_merge($this->query, array('id' => $id));
+
+			Redirect::success('创建成功，请编辑', Url::make('edit', $query));
 		}
 		else {
-			dump(array($this->category_fk_name => $this->category_id));
-			exit();
 			Redirect::error('创建失败，请重试');
 		}
 	}
@@ -240,9 +250,8 @@ class Content extends Controller {
 
 			$data = $this->model->create();
 			$this->model->save($data);
-
-			Redirect::success('编辑成功', Url::make('index'));
-
+			// dump($this->query);
+			Redirect::success('编辑成功', Url::make('index', $this->query));
 		}
 
 		else if($this->pk_id) {
@@ -365,12 +374,20 @@ class Content extends Controller {
 		if($this->category_id_require && !isset($_GET[$this->category_query_name]))
 		{
 			Debug::output(new Exception('没有提供:' . $this->category_query_name));
-
 		}
 
 		if($this->category_id_auto_set && isset($_GET[$this->category_query_name]))
 		{
 			$this->category_id = $_GET[$this->category_query_name];
+		}
+	}
+
+	protected function save_query()
+	{
+		$this->query = array_merge($_GET, $this->query);
+		if(isset($this->query[$this->pk_name]))
+		{
+			unset($this->query[$this->pk_name]);
 		}
 	}
 }

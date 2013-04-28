@@ -151,8 +151,10 @@ class Content extends Controller {
 		$this->pk_id = $_GET[$this->pk_name];
 
 		// 输出缩略图名称
-		if($this->cover_thumb_name) {
-			$this->assign('coverThumbSize', $this->cover_thumb_name);
+		if($this->cover_thumb_name)
+		{
+			$thumb = explode(',', $this->cover_thumb_name);
+			$this->assign('coverThumbSize', $thumb[0]);
 		}
 
 		// 如果category_id没有被定义，则自动获取

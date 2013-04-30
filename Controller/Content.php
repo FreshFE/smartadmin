@@ -172,6 +172,19 @@ class Content extends Controller {
 	}
 
 	/**
+	 * 绑定查询钩子
+	 *
+	 * @param string $method
+	 */
+	public function on($method)
+	{
+		if(method_exists($this, $method))
+		{
+			$this->$method();
+		}
+	}
+
+	/**
 	 * Read List Action
 	 * 用于显示主模型列表
 	 * 具有页码筛选功能
@@ -189,6 +202,9 @@ class Content extends Controller {
 			$this->condition[$this->category_fk_name] = $_GET[$this->category_query_name];
 		}
 
+		// query查询前，通常用于设置查询条件
+		$this->on('index_query_before');
+
 		// 获得内容并输出页码数组
 		$datas = $this->model->where($this->condition)->order($this->list_order)->page($page, $this->list_rows)->select();
 		$this->assign('datas', $datas);
@@ -196,6 +212,10 @@ class Content extends Controller {
 		$pager = $this->model->where($this->condition)->pager($page, $this->list_rows);
 		$this->assign('pager', $pager);
 
+		// query查询，通常用于添加补充设置
+		$this->on('index_query_after');
+
+		// 输出
 		$this->display();
 	}
 
@@ -254,8 +274,14 @@ class Content extends Controller {
 		if($this->pk_id)
 		{
 			$data = $this->model->find($this->pk_id);
+
+			$this->on('get_edit_query_before');
+
 			$this->assign('data', $data);
 			$this->assign('category', $this->category());
+
+			$this->on('get_edit_query_after');
+
 			$this->display();
 		}
 		else {

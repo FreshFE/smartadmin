@@ -1,6 +1,6 @@
 <?php namespace Smartadmin\Controller;
 
-use Smartadmin\Controller\Restful as Controller;
+use Think\Controller as Controller;
 use Think\Debug as Debug;
 use Think\Exception as Exception;
 use Think\Lang as Lang;

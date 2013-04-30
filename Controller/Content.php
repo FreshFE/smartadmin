@@ -201,21 +201,17 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function create()
+	public function get_create()
 	{
-		// Post提交后的执行
-		if(Request::is('post')) {
+		$this->assign('category', $this->category());
+		$this->display('edit');
+	}
 
-			$data = $this->model->create();
-			$this->model->add($data);
-			Redirect::success('创建成功', Url::make('index', $this->query));
-
-		// 未执行Post时的默认行为
-		} else {
-
-			$this->assign('category', $this->category());
-			$this->display('edit');
-		}
+	public function post_create()
+	{
+		$data = $this->model->create();
+		$this->model->add($data);
+		Redirect::success('创建成功', Url::make('index', $this->query));
 	}
 
 	/**
@@ -246,24 +242,25 @@ class Content extends Controller {
 	 *
 	 * @return void
 	 */
-	public function edit()
+	public function get_edit()
 	{
-		if(Request::is('post')) {
-
-			$data = $this->model->create();
-			$this->model->save($data);
-			// dump($this->query);
-			Redirect::success('编辑成功', Url::make('index', $this->query));
-		}
-
-		else if($this->pk_id) {
-
+		if($this->pk_id)
+		{
 			$data = $this->model->find($this->pk_id);
 			$this->assign('data', $data);
 			$this->assign('category', $this->category());
-
 			$this->display();
 		}
+		else {
+			Response::_404('不存在id值');
+		}
+	}
+
+	public function post_edit()
+	{
+		$data = $this->model->create();
+		$this->model->save($data);
+		Redirect::success('编辑成功', Url::make('index', $this->query));
 	}
 
 	/**

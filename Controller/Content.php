@@ -135,6 +135,13 @@ class Content extends Controller {
 	protected $query = array();
 
 	/**
+	 * 列表内容的排序条件
+	 *
+	 * @var string
+	 */
+	protected $list_order = '';
+
+	/**
 	 * 构造函数
 	 * 构建常用参数内容
 	 *
@@ -183,7 +190,7 @@ class Content extends Controller {
 		}
 
 		// 获得内容并输出页码数组
-		$datas = $this->model->where($this->condition)->page($page, $this->list_rows)->select();
+		$datas = $this->model->where($this->condition)->order($this->list_order)->page($page, $this->list_rows)->select();
 		$this->assign('datas', $datas);
 
 		$pager = $this->model->where($this->condition)->pager($page, $this->list_rows);

@@ -308,6 +308,9 @@ class Content extends Controller {
 
 			$data = $this->model->find($this->pk_id);
 			$this->assign('data', $data);
+
+			$this->on('detail_query_after');
+
 			$this->display();
 		}
 	}

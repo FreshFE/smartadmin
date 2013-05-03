@@ -11,7 +11,7 @@ use Think\Lang as Lang;
  */
 class Api extends Controller {
 
-	protected function errorJson(Exception $error)
+	public function errorJson(Exception $error)
 	{
 		$this->assign('success', 0);
 		$this->assign('error', $error->getMessage());
@@ -19,7 +19,7 @@ class Api extends Controller {
 		$this->json();
 	}
 
-	protected function successJson($output = null, $is_array = false, $merge = array())
+	public function successJson($output = null, $is_array = false, $merge = array())
 	{
 		// 成功
 		$this->assign('success', 1);

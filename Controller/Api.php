@@ -13,7 +13,7 @@ class Api extends Controller {
 
 	protected function errorJson(Exception $error)
 	{
-		$this->assign('success', false);
+		$this->assign('success', 0);
 		$this->assign('error', $error->getMessage());
 		$this->assign('error_msg', Lang::get($error->getMessage()));
 		$this->json();
